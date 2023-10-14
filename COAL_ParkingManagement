@@ -1,0 +1,1051 @@
+.model small
+.stack 100h
+.data
+ 
+    floor1 db 1,1,1,1,1,1,1,1,1,1
+    floor2 db 1,1,1,1,1,1,1,1,1,1
+    floor3 db 1,1,1,1,1,1,1,1,1,1
+             ;  0    -1    -2   -3     -4
+             ;  13   12    11   10     9
+             ;  39   36    33   30     27
+    flcod1 db '1a0','2b3','312','23s','1c0','144$','645','4e3','4r4','5v4'
+    flcod2 db '345','234','876','768','890','349','564','756','2er','2f2'                    
+    flcod3 db '53d','34d','d3x','88n','86x','34h','n7c','5xc','7nj','3d2'
+    
+    
+    
+    currcod    dw 0
+    ttlincm    dw 0
+    currprk    dw 0
+    totalprk   dw 0
+    passcode   db '1122' 
+    passcheck  db 4,'$'
+    passcond   db 0
+    psch       db 10 dup(?),'$'
+    str1       db '  =================================================$'
+    str2       db '||             Coal | Parking System               ||$'
+    str3       db '||                    |Muteeb|                     ||$'
+    str4       db '  =================================================$'
+    msg1       db , '1 To Enter as User$' 
+    msg2       db , '2 To Enter as Admin$'
+    msg3       db , 'Enter Password:$'
+    msg4       db , 'Logged in As Admin$'
+    
+    adms1      db , '1 To Check Parked Vehicles$'
+    adms2      db , '2 To Current Income$'
+    adms3      db , '3 To Check Empty Slots$'
+    adms4      db , 'Enter:$'
+    adms5      db , '4 To Go Back$'
+    
+    
+    umsg1      db , '1 To Park Vehicle$'                                                          
+    umsg2      db , '2 To Get Vehicle$'
+    umsg3      db , '3 To Go Back$'
+    umsg4      db , 'Enter:$'   
+   
+    prkmsg1    db , 'Park Vehicle on Floor $'
+    prkmsg2    db , ' Slot $'
+    prkmsg3    db , 'Your Parking Code Is:$'
+    prkmsg4    db , 'Sorry Parking is Full!$'
+    
+    prkdms1    db , ' Vehicles Are Currently Parked.$'
+    prkdms2    db , ' Empty Spaces Found.$'
+    incmsg1    db , 'rs Is Your Current Income.$'
+    getvmsg    db , 'Enter Your Parking Code:$'
+    getvmsg2   db , 'Get Vehicle From Floor $'
+    getvmsg3   db , ' Slot $'
+    getvmsg4   db , 'Wrong Credetials or No Such Vehicle Found...$'
+    quo dw ?
+    rem dw ?  
+    chckcod    db 3,'$'
+    onfloor    db 0
+    currflr    db 0
+.code
+
+getv macro
+   push ax
+   push bx
+   push cx
+   push dx
+   push si
+   push di
+   
+
+    clrScrn
+    mov dx,offset getvmsg
+    prnts    
+    mov  si,offset chckcod
+    mov cx,3
+    
+    enter:
+    mov ah,1
+    int 21h
+    mov [si],ax    
+    inc si
+    loop enter
+;----------------------------
+;searching on floor1
+ mov currflr,1
+ mov di,offset flcod1
+ mov cx,10
+stp1:
+    mov si,offset chckcod
+    mov al,[di]
+    mov bl,[si]
+    cmp al,bl
+    je stp2
+    inc di
+    inc di
+    inc di
+    loop stp1
+    jmp fl2
+stp2:
+    inc si
+    inc di
+    mov al,[di]
+    mov bl,[si]
+    cmp al,bl
+    je stp3
+    inc di
+    inc di
+    loop stp1
+    jmp fl2    
+stp3:
+    inc si
+    inc di
+    mov al,[di]
+    mov bl,[si]
+    cmp al,bl
+    je found
+    inc di
+    inc di
+    loop stp1
+    jmp fl2    
+;not found on floor1    
+;--------------------------    
+;searching on floor2
+fl2:
+ mov currflr,2
+ mov di,offset flcod2
+ mov cx,10
+stp21:
+    mov si,offset chckcod
+    mov al,[di]
+    mov bl,[si]
+    cmp al,bl
+    je stp22
+    inc di
+    inc di
+    inc di
+    loop stp21
+    jmp fl3
+
+stp22:
+    inc si
+    inc di
+    mov al,[di]
+    mov bl,[si]
+    cmp al,bl
+    je stp23
+    inc di
+    inc di
+    loop stp21
+    jmp fl3    
+
+stp23:
+    inc si
+    inc di
+    mov al,[di]
+    mov bl,[si]
+    cmp al,bl
+    je found
+    inc di
+    inc di
+    loop stp21
+    jmp fl3    
+;not found on floor2    
+;--------------------------    
+;searching on floor3
+fl3:
+ mov currflr,3
+ mov di,offset flcod3
+ mov cx,10
+stp31:
+    mov si,offset chckcod
+    mov al,[di]
+    mov bl,[si]
+    cmp al,bl
+    je stp32
+    inc di
+    inc di
+    inc di
+    loop stp31
+    jmp ntfound
+
+stp32:
+    inc si
+    inc di
+    mov al,[di]
+    mov bl,[si]
+    cmp al,bl
+    je stp33
+    inc di
+    inc di
+    loop stp31
+    jmp ntfound
+    
+stp33:
+    inc si
+    inc di
+    mov al,[di]
+    mov bl,[si]
+    cmp al,bl
+    je found
+    inc di
+    inc di
+    loop stp31
+    jmp ntfound    
+;not found on floor3    
+;--------------------------    
+
+ntfound:
+    nxtline
+    mov dx,offset getvmsg4
+    prnts
+    jmp endgtv
+  
+found:  
+  mov dx,10
+  sub dx,cx
+  mov cx,dx
+  mov bx,cx
+  add bx,49
+  
+  cmp currflr,1
+  je  flr1
+  cmp currflr,2
+  je  flr2
+  jmp flr3
+ 
+ flr1:
+  mov si, offset floor1
+  cmp cx,0
+  je skp1
+  trav:
+  inc si
+  loop trav
+   
+ skp1:
+  cmp [si],0
+  je ntfound
+  jmp rmv
+ 
+ flr2:
+  mov si, offset floor2
+  cmp cx,0
+  je skp2
+  trav2:
+  inc si
+  loop trav2
+ skp2:
+  cmp [si],0
+  je ntfound
+  jmp rmv
+ 
+ flr3:
+   mov si, offset floor3
+  cmp cx,0
+  je skp3
+  trav3:
+  inc si
+  loop trav3
+ skp3:
+  cmp [si],0
+  je ntfound
+  jmp rmv
+
+ rmv:
+     mov [si],0
+    nxtline
+     mov dx,offset getvmsg2
+     prnts
+     mov dl,currflr
+     add dl,48
+     prntc
+     mov dx,offset getvmsg3
+     prnts
+     mov dx,bx
+     prntc
+
+endgtv:  
+call status
+
+
+
+pop di
+pop si
+pop dx
+pop cx
+pop bx
+pop ax
+endm
+;--------------------------------------
+parknew macro                  ;checks and assign enpty slots
+   push ax
+   push bx
+   push cx
+   push dx
+   push si
+   push di
+   
+   nxtline
+   mov onfloor,1 
+   mov si,offset floor1
+   mov di,offset flcod1
+   mov cx,0
+   
+   prk:
+   cmp cx,10
+   je prk1end
+   cmp [si],0
+   je  loc
+   inc cx
+   inc si
+   jmp prk
+   prk1end:
+    
+    
+   mov onfloor,2 
+   mov si,offset floor2
+   mov di,offset flcod2
+   mov cx,0
+   
+   pr2:
+   cmp cx,10
+   je pr2end
+   cmp [si],0
+   je  loc
+   inc cx 
+   inc si
+   jmp pr2 
+   pr2end:
+   
+   mov onfloor,3 
+   mov si,offset floor3
+   mov di,offset flcod3 
+   mov cx,0
+   
+   pr3:
+   cmp cx,10
+   je pr3end
+   cmp [si],0
+   je  loc
+   inc cx
+   inc si
+   jmp pr3 
+   pr3end: 
+   mov dx,offset prkmsg4
+   prnts
+   jmp endprkn
+   
+   
+   loc:
+   clrScrn
+ 
+   mov [si],1   
+   
+   mov ax,4  ;3
+   mul cx    ;3*4=12
+
+   push cx   
+    cmp cx,0
+    je prkdn
+    
+    
+    posi:
+    inc di
+    inc di 
+    inc di
+   
+    loop posi
+   
+   
+   
+   
+   
+   
+   pop cx
+   
+   prkdn:
+   nxtline
+   mov dx,offset prkmsg1
+   prnts
+   mov dl,onfloor
+   add dl,48
+   prntc
+   mov dx,offset prkmsg2
+   prnts
+   mov dx,cx
+   add dx,49
+   prntc
+   nxtline
+   mov dx,offset prkmsg3
+   prnts
+   mov dx,[di]
+   prntc
+   inc di
+   mov dx,[di]
+   prntc
+   inc di
+   mov dx,[di]
+   prntc
+   nxtline
+   prkend:
+   inc totalprk
+   call status
+   pop di
+   pop si
+   pop dx
+   pop cx
+   pop bx
+   pop ax
+   
+endprkn:   
+   endm
+;-----------------------------------------
+income macro
+    push bx
+    push ax
+   
+    mov ax,totalprk
+    mov bx,20
+    mul bx
+    mov ttlincm,ax
+    clrScrn
+    displayinc
+    mov dx,offset incmsg1
+    prnts
+    pop ax
+    pop bx  
+endm
+;-----------------------------------------
+displayinc macro
+  push ax
+  push bx
+  push dx
+    mov dx,ttlincm
+    mov ax,dx
+    mov dx,0
+    mov bx,010
+    div bx 
+
+    mov quo,ax
+    mov rem,dx
+    
+    mov dx,quo
+    add dx,48
+    mov ah,2
+    int 21h
+    mov dx,rem
+    add dx,48
+    mov ah,2
+    int 21h
+  pop dx
+  pop bx
+  pop ax 
+endm
+;-----------------------------------------
+clrScrn macro
+    push ax
+    mov ah, 00  
+    mov al,02
+    int 10h
+    head
+    pop ax
+    
+endm 
+    
+
+
+;-----------------------------------------
+displaycurr macro
+  push ax
+  push bx
+  push dx
+    mov dx,currprk
+    mov ax,dx
+    mov dx,0
+    mov bx,010
+    div bx 
+
+    mov quo,ax
+    mov rem,dx
+    
+    mov dx,quo
+    add dx,48
+    mov ah,2
+    int 21h
+    mov dx,rem
+    add dx,48
+    mov ah,2
+    int 21h
+  pop dx
+  pop bx
+  pop ax 
+endm
+;-----------------------------------------
+    
+parked macro
+    push ax
+    push bx
+    push cx
+    push dx
+    mov currprk,0
+  
+    mov bx,0
+    mov si,offset floor1
+   
+mov cx,30 
+   
+    loop1:
+    mov ax,1
+    cmp bx,10
+    je  endloop1
+    inc bx 
+    cmp [si],1
+    je true1         
+    ;false
+    inc si
+    loop loop1    
+   true1:
+        inc si
+        inc currprk  
+    loop loop1    
+     endloop1:
+     
+;mov dx,offset currprk     
+     
+    mov bx,0
+    mov si,offset floor2
+    loop2:
+    mov ax,2
+    cmp bx,10
+    je  endloop2
+    inc bx 
+    cmp [si],1
+    je true2         
+    ;false
+    inc si
+    loop loop2    
+   true2:
+        inc si
+        inc currprk  
+    loop loop2    
+     endloop2:
+     
+ ;mov dx,offset currprk    
+     
+    mov bx,0
+    mov si,offset floor3
+    loop3:
+    mov ax,3
+    cmp bx,10
+    je  endloop3
+    inc bx 
+    cmp [si],1
+    je true3         
+    ;false
+    inc si
+    loop loop3    
+    cmp cx,0
+    je endloop3
+   true3:
+        inc si
+        inc currprk  
+    loop loop3    
+     endloop3:
+ ;mov dx,offset currprk    
+ clrScrn
+    displaycurr 
+ mov dx,offset prkdms1
+ prnts
+ call status
+    pop dx
+    pop cx
+    pop bx
+    pop ax 
+ endm   
+
+
+;-----------------------------------------
+
+
+empty macro
+    push ax
+    push bx
+    push cx
+    push dx
+    mov currprk,0
+  
+    mov bx,0
+    mov si,offset floor1
+   
+mov cx,30 
+   
+    eloop1:
+    mov ax,1
+    cmp bx,10
+    je  eendloop1
+    inc bx 
+    cmp [si],0
+    je etrue1         
+    ;false
+    inc si
+    loop eloop1    
+   etrue1:
+        inc si
+        inc currprk  
+    loop eloop1    
+     eendloop1:
+     
+;mov dx,offset currprk     
+     
+    mov bx,0
+    mov si,offset floor2
+    eloop2:
+    mov ax,2
+    cmp bx,10
+    je  eendloop2
+    inc bx 
+    cmp [si],0
+    je etrue2         
+    ;false
+    inc si
+    loop eloop2    
+   etrue2:
+        inc si
+        inc currprk  
+    loop eloop2    
+     eendloop2:
+     
+ ;mov dx,offset currprk    
+     
+    mov bx,0
+    mov si,offset floor3
+    eloop3:
+    mov ax,3
+    cmp bx,10
+    je  eendloop3
+    inc bx 
+    cmp [si],0
+    je etrue3         
+    ;false
+    inc si
+    loop eloop3    
+    cmp cx,0
+    je eendloop3
+   etrue3:
+        inc si
+        inc currprk  
+    loop eloop3    
+     eendloop3:
+ ;mov dx,offset currprk    
+ clrScrn
+    displaycurr 
+    mov dx,offset prkdms2
+    prnts
+    nxtline
+ prnts
+ call status
+    pop dx
+    pop cx
+    pop bx
+    pop ax 
+ endm   
+
+;-----------------------------------------
+
+checkpass proc 
+   
+   push ax
+   push bx
+   push cx
+   push dx
+   
+    mov si,offset passcheck
+    mov cx,4
+    
+    
+    input:
+    mov ah,1
+    int 21h
+    mov [si],al
+    cmp al,13
+    je done
+    inc si
+    loop input
+    done:
+    mov bl,'$'
+    mov [si],bl
+
+
+
+    
+    
+    
+    
+    mov si,offset passcode
+    mov di,offset passcheck
+    mov cx,4
+    
+    cmpr:
+         mov al,[si]
+         mov bl,[di]
+         
+         cmp al,bl
+         jne ntsam
+         inc si
+         inc di
+    loop cmpr
+    
+    ;mov dx,'T'
+    mov passcond,1
+    jmp cmpdn
+    
+    
+    
+    
+    ntsam:
+   mov passcond,0
+   jmp cmpdn
+      
+ cmpdn:
+ 
+ 
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+ret  
+checkpass endp  
+
+
+
+;-----------------------------------------
+
+
+
+ 
+ 
+ 
+admin proc
+    push ax
+    push bx
+    push cx
+    push dx
+  
+  clrScrn
+  mov dx,offset msg3
+  prnts
+  call checkpass
+  
+  
+  mov dl,passcond
+  cmp dl,1
+  je loggedin
+  jmp endadmin 
+  
+  
+loggedin:
+    clrScrn
+    mov dx,offset msg4
+    prnts
+    
+admn:    
+    nxtline
+    nxtline
+    mov dx,offset adms1
+    prnts
+    nxtline
+    mov dx,offset adms2
+    prnts
+    nxtline
+    mov dx,offset adms3
+    prnts
+    nxtline
+    mov dx,offset adms5
+    prnts
+    nxtline
+    mov dx,offset adms4
+    prnts
+   
+    mov ah,1
+    int 21h
+    nxtline
+   
+    cmp al,'2'
+    je opt2
+    cmp al,'3'
+    je opt3
+    cmp al,'4'
+    je endadmin
+   
+    parked
+    jmp admn
+    opt2:
+      income
+      jmp admn
+    opt3:
+     empty
+    jmp admn
+    
+    
+    
+   
+    
+     
+endadmin: 
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+admin endp     
+
+
+
+;-----------------------------------------
+
+
+
+user macro
+    clrScrn
+strtusr:
+    nxtline
+    mov dx, offset umsg1
+    prnts
+    nxtline
+    mov dx, offset umsg2
+    prnts
+    nxtline
+    mov dx, offset umsg3
+    prnts
+    nxtline
+    mov dx, offset umsg4
+    prnts
+    
+    mov ah,1
+    int 21h
+    cmp al,'1'
+    je uopt1
+    cmp al,'2'
+    je uopt2
+    cmp al,'3'
+    je uopt3
+    
+    
+    uopt1:
+    
+      parknew
+      jmp strtusr
+    uopt2:
+      getv
+      jmp strtusr
+    
+    uopt3:
+    
+    
+     nxtline
+    endm
+
+
+
+
+
+;-----------------------------------------
+  
+    
+prnts macro
+    mov ah,9
+    int 21h
+endm
+
+
+;-----------------------------------------
+
+
+prntc macro
+    mov ah,2
+    int 21h
+endm
+
+
+;-----------------------------------------
+
+
+nxtline macro
+  push ax
+  push dx
+  mov dx,10
+   mov ah,2
+   int 21h
+   mov dx,13
+   mov ah,2
+   int 21h
+   pop dx
+   pop ax
+     
+endm          
+            
+
+;-----------------------------------------
+
+
+head macro
+   push ax
+   push dx
+   mov dx,offset str1
+   mov ah,9
+   int 21h
+  
+   
+   nxtline
+   
+   mov dx,offset str2
+   mov ah,9
+   int 21h  
+   
+   nxtline 
+   
+   mov dx,offset str3
+   mov ah,9
+   int 21h
+   
+  nxtline 
+   
+   mov dx,offset str4
+   mov ah,9
+   int 21h
+   
+   nxtline 
+   pop dx
+   pop ax
+       
+endm
+
+
+;-----------------------------------------
+status proc
+   push cx
+   push dx
+   push si
+   nxtline
+    mov si,offset floor1
+    mov cx,10
+    
+    flor1:
+       mov dx,[si]
+       add dx,48
+       inc si
+       prntc
+       mov dx,','
+       prntc
+    loop flor1
+    
+    
+    nxtline
+    
+    
+    
+    mov si,offset floor2
+    mov cx,10
+    
+    flor2:
+       mov dx,[si]
+       add dx,48
+       inc si
+       prntc
+       mov dx,','
+       prntc
+    loop flor2
+    
+    nxtline
+    
+    mov si,offset floor3
+    mov cx,10
+    
+    flor3:
+       mov dx,[si]
+       add dx,48
+       inc si
+       prntc
+       mov dx,','
+       prntc
+    loop flor3
+    
+    nxtline
+   pop si
+   pop dx
+   pop cx
+status endp
+
+;-----------------------------------------
+
+
+mainmenu proc
+    mov dx,offset msg1
+    prnts
+    nxtline
+    mov dx,offset msg2
+    prnts
+    nxtline  
+    
+    mov ah,1
+    int 21h
+    
+    cmp al,'1'
+    je mopt1
+      
+    cmp al,'2'
+    je mopt2  
+      
+mopt1:
+   user
+   jmp endmen
+mopt2:
+   call admin
+   nxtline
+    
+
+
+endmen:    
+ mainmenu endp
+
+
+
+
+;-----------------------------------------
+
+
+
+main proc
+   
+   mov ax,@data
+   mov ds,ax
+
+   head 
+   
+   mov cx,10
+
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   call mainmenu 
+   
+end main
